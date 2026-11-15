@@ -2,8 +2,8 @@ name: Promote pi-cloud image (manual deploy)
 
 # Deploys are deliberate: pushing to main only builds and pushes images.
 # Run this workflow (Actions -> "Promote pi-cloud image (manual deploy)" ->
-# "Run workflow") to bump artr-gitops/apps/pi/deployment.yaml; Argo CD
-# auto-syncs the pi app.
+# "Run workflow") to bump artr-gitops/apps/hermes/deployment.yaml (the
+# claude-box sidecar + its init containers); Argo CD auto-syncs the hermes app.
 #
 # image_tag is the CI tag of the image to deploy: sha-<7 hex> = the short sha
 # of the pi-cloud commit that built it, e.g. sha-88a773e. Leave it EMPTY to
@@ -55,13 +55,13 @@ jobs:
           token: ${{ secrets.GITOPS_TOKEN }}
           path: gitops
 
-      - name: Bump pi image tag
+      - name: Bump pi-cloud image tag (hermes claude-box)
         env:
           IMAGE: vcp.ocir.io/axtvnrdemzo7/pi-cloud:${{ steps.resolve.outputs.image_tag }}
         run: |
-          FILE=gitops/apps/pi/deployment.yaml
+          FILE=gitops/apps/hermes/deployment.yaml
           if [ ! -f "$FILE" ]; then
-            echo "apps/pi/deployment.yaml not present" >&2
+            echo "apps/hermes/deployment.yaml not present" >&2
             exit 1
           fi
           sed -i "s|image: vcp.ocir.io/axtvnrdemzo7/pi-cloud:.*|image: ${IMAGE}|" "$FILE"
@@ -75,10 +75,10 @@ jobs:
         run: |
           git config user.name "pi-cloud-ci-bot"
           git config user.email "pi-cloud-ci-bot@users.noreply.github.com"
-          git add apps/pi/deployment.yaml
+          git add apps/hermes/deployment.yaml
           if git diff --staged --quiet; then
             echo "No image change (already at ${{ steps.resolve.outputs.image_tag }})"
             exit 0
           fi
-          git commit -m "chore(pi): promote image to ${{ steps.resolve.outputs.image_tag }}"
+          git commit -m "chore(hermes): promote pi-cloud image to ${{ steps.resolve.outputs.image_tag }}"
           git push
