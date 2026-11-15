@@ -107,11 +107,23 @@ COPY container/herdr-pane-config.sh /usr/local/bin/herdr-pane-config
 RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/sync-configs.sh /usr/local/bin/herdr-pane-config && \
     ln -s /usr/local/bin/entrypoint.sh /entrypoint
 
-# Root with key-only SSH (personal dev box; never expose publicly without a
-# non-root user + hardening).
+# Non-root runtime for the hermes claude-box sidecar (artr-gitops apps/hermes),
+# which runs this image as UID/GID 10000 with HOME=/opt/data/claude-home:
+# - a real passwd entry (sshd, whoami, git need one)
+# - mise shims writable, so `bundle install` can reshim gem executables
+#   (Ruby itself stays root-owned; gems go to GEM_HOME/BUNDLE_PATH on the PVC)
+# - TMPDIR set (Debian leaves it unset; agents write "$TMPDIR/x")
+# - a WORKDIR that UID 10000 can stat (git/herdr fail in /root)
+RUN groupadd -g 10000 claude && \
+    useradd -u 10000 -g 10000 -d /opt/data/claude-home -M -s /bin/bash \
+      -c "Claude (hermes claude-box)" claude && \
+    chown -R 10000:10000 /opt/mise/shims
+ENV TMPDIR=/tmp
+
+# Default user stays root (the legacy entrypoint expects it); Kubernetes sets
+# runAsUser: 10000 for claude-box.
 USER root
-# ~/artieeez mirrors the Mac ~/artieeez layout (see docs/BOOT-SYNC.md).
-WORKDIR /root/artieeez
+WORKDIR /tmp
 
 EXPOSE 22
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
