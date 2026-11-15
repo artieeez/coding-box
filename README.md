@@ -50,7 +50,7 @@ one copy of the heavy layers:
 ## How it's deployed
 
 GitHub Action builds `linux/arm64` → pushes to OCIR (`vcp.ocir.io/axtvnrdemzo7/pi-cloud`)
-→ bumps the image tag in `artieeez/artr-gitops/apps/pi/deployment.yaml` → Argo CD syncs.
+→ bumps the image tag in `artieeez/artr-gitops/apps/hermes/deployment.yaml` (claude-box sidecar) → Argo CD syncs.
 
 The app build pins `BASE_TAG` (both workflows must stay in sync when the base is
 re-published under a new tag).
