@@ -28,6 +28,17 @@ ARG GH_VERSION=2.102.0
 # @playwright/cli (browser automation CLI for pi UAT); its chromium headless
 # shell is baked at image build — see the install-browser RUN below.
 ARG PLAYWRIGHT_CLI_VERSION=0.1.22
+# markdownlint-cli2 (pinned, npm): agents lint markdown per repo AGENTS.md.
+ARG MARKDOWNLINT_CLI2_VERSION=0.23.2
+
+# python3 + file: everyday agent tooling (edit scripts, type sniffing) and the
+# python3 that herdr's Claude integration hook needs to report session state.
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y python3 file && \
+    rm -rf /var/lib/apt/lists /var/cache/apt/archives
+
+# markdownlint-cli2 for agents running in the hermes claude-box sidecar.
+RUN npm install -g "markdownlint-cli2@${MARKDOWNLINT_CLI2_VERSION}"
 
 # pi coding agent (pinned; --ignore-scripts per upstream docs)
 RUN npm install -g --ignore-scripts "@earendil-works/pi-coding-agent@${PI_VERSION}"
