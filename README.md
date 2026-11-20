@@ -32,6 +32,8 @@ A persistent, SSH-accessible dev box on the artr OKE cluster (oracle-cluster) fo
 - **herdr 0.8.x** — terminal workspace manager: workspaces/tabs/panes host pi agents
   and raw shells; a persistent server survives SSH disconnects
 - **sshd** (key-only, root, hardened) — the only entry point, port 22
+- **LazyVim tooling**: fd, fzf, unzip (Mason), lazygit (pinned `LAZYGIT_VERSION`);
+  `nvim` is also linked into `/usr/local/bin` for non-login shells
 - **neovim 0.12.5** (official arm64 build) — sshd + nvim = phone-friendly editing. The box runs your LazyVim config (`artieeez/nvim-config`), boot-synced to `~/.config/nvim`; nvim/herdr icons render client-side, so the ssh client's terminal needs a Nerd Font (phone: [docs/PHONE-TERMUX.md](docs/PHONE-TERMUX.md) §6, Mac: JetBrainsMono Nerd Font)
 - ~~tmux~~ — removed in the ruby-4.0.5-5 base rebuild; herdr hosts the panes
 - git, ripgrep, sqlite3, libvips, jq, Node 24

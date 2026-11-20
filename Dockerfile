@@ -41,6 +41,8 @@ ARG ANTIGRAVITY_VERSION=1.5.13
 ARG ANTIGRAVITY_URL=https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.13-5999302598852608/linux-arm/cli_linux_arm64.tar.gz
 ARG ANTIGRAVITY_SHA512=dccea2eb455099f5175f0c87cc47b38fcefe4cb0cb44dea3927469bb4bbf68ac3c0b30fc04affb24c17e90959386a93c3785e8e4b8b1a3338ca4e4d57b80057b
 ARG GH_VERSION=2.102.0
+# lazygit (LazyVim's <leader>gg), pinned; verified against the release checksums.
+ARG LAZYGIT_VERSION=0.66.3
 # @playwright/cli (browser automation CLI for pi UAT); its chromium headless
 # shell is baked at image build — see the install-browser RUN below.
 ARG PLAYWRIGHT_CLI_VERSION=0.1.22
@@ -75,6 +77,16 @@ RUN cd /tmp && \
     install -m 0755 herdr-linux-aarch64 /usr/local/bin/herdr && \
     rm -f herdr-linux-aarch64
 
+# LazyVim tooling (artieeez/nvim-config, same as the Mac): fd + fzf for the
+# pickers, unzip for Mason's LSP downloads. Debian names fd `fdfind`. nvim is
+# also linked into /usr/local/bin: non-login shells (`ssh box cmd`, herdr-core
+# terminals) don't get /opt/nvim/bin from profile.d.
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y fd-find fzf unzip && \
+    rm -rf /var/lib/apt/lists /var/cache/apt/archives && \
+    ln -s /usr/bin/fdfind /usr/local/bin/fd && \
+    ln -s /opt/nvim/bin/nvim /usr/local/bin/nvim
+
 # herdr-core (pinned, checksum-verified). In /usr/local/bin so the non-login
 # `ssh box hc connect` the Herdr app runs finds it on sshd's default PATH.
 RUN cd /tmp && \
@@ -107,6 +119,15 @@ RUN cd /tmp && \
     install -m 0755 antigravity /usr/local/bin/antigravity && \
     rm -f antigravity ag.tar.gz && \
     test "$(HOME=/tmp antigravity --version)" = "${ANTIGRAVITY_VERSION}"
+
+# lazygit (pinned) — verified against the release checksums file.
+RUN cd /tmp && \
+    curl -fsSLO "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_linux_arm64.tar.gz" && \
+    curl -fsSLO "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/checksums.txt" && \
+    grep " lazygit_${LAZYGIT_VERSION}_linux_arm64.tar.gz\$" checksums.txt | sha256sum -c - && \
+    tar -xzf "lazygit_${LAZYGIT_VERSION}_linux_arm64.tar.gz" lazygit && \
+    install -m 0755 lazygit /usr/local/bin/lazygit && \
+    rm -f lazygit "lazygit_${LAZYGIT_VERSION}_linux_arm64.tar.gz" checksums.txt
 
 # gh (GitHub CLI, pinned) — verified against the release checksums file, which
 # carries one line per asset; grep the arm64 tarball line and sha256sum -c it.
