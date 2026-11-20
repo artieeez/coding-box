@@ -19,6 +19,12 @@ A persistent, SSH-accessible dev box on the artr OKE cluster (oracle-cluster) fo
 - **Ruby** via [mise](https://mise.jdx.dev) (4.0.5, matches `home`) — `mise` is
   `.ruby-version` aware; native-gem `bundle install` works out of the box (the
   base bakes `build-essential`)
+- **Claude Code** (native build, pinned `CLAUDE_CODE_VERSION`, auto-update off) at
+  `/usr/local/bin/claude`, so login and non-login shells both find it
+- **herdr-core (`hc`)**, pinned `HC_VERSION` — the terminal runtime the
+  [Herdr](https://herdr.dev) mobile/desktop apps talk to over `ssh <box> hc connect`
+  (in the hermes claude-box the core runs in the `claude-box` container; see
+  artr-gitops `apps/hermes/README.md`)
 - **herdr 0.8.x** — terminal workspace manager: workspaces/tabs/panes host pi agents
   and raw shells; a persistent server survives SSH disconnects
 - **sshd** (key-only, root, hardened) — the only entry point, port 22
