@@ -29,7 +29,7 @@ ARG GH_VERSION=2.102.0
 # shell is baked at image build — see the install-browser RUN below.
 ARG PLAYWRIGHT_CLI_VERSION=0.1.22
 # markdownlint-cli2 (pinned, npm): agents lint markdown per repo AGENTS.md.
-ARG MARKDOWNLINT_CLI2_VERSION=0.23.2
+ARG MARKDOWNLINT_CLI2_VERSION=0.24.2
 
 # python3 + file: everyday agent tooling (edit scripts, type sniffing) and the
 # python3 that herdr's Claude integration hook needs to report session state.
