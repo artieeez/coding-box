@@ -35,6 +35,11 @@ ARG HC_SHA256=e844a2bfab48a226097679d076bc83042fe57fccef5387ef802e5b24e78b529a
 # https://downloads.claude.ai/claude-code-releases/<version>/manifest.json
 ARG CLAUDE_CODE_VERSION=2.1.325
 ARG CLAUDE_CODE_SHA256=7b6e484b1989a5a14a4b354709ccc8672518a3ec5b9ccd7981fc6254327fde67
+# Antigravity CLI (Google; `antigravity`). URL + sha512 from
+# https://antigravity-cli-auto-updater-974169037036.us-central1.run.app/manifests/linux_arm64.json
+ARG ANTIGRAVITY_VERSION=1.5.13
+ARG ANTIGRAVITY_URL=https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.13-5999302598852608/linux-arm/cli_linux_arm64.tar.gz
+ARG ANTIGRAVITY_SHA512=dccea2eb455099f5175f0c87cc47b38fcefe4cb0cb44dea3927469bb4bbf68ac3c0b30fc04affb24c17e90959386a93c3785e8e4b8b1a3338ca4e4d57b80057b
 ARG GH_VERSION=2.102.0
 # @playwright/cli (browser automation CLI for pi UAT); its chromium headless
 # shell is baked at image build — see the install-browser RUN below.
@@ -91,6 +96,17 @@ RUN cd /tmp && \
     install -m 0755 claude /usr/local/bin/claude && \
     rm -f claude && \
     claude --version
+
+# Antigravity CLI (pinned, sha512-verified). Baked outside the PVC home like
+# claude; self-update off (AGY_CLI_DISABLE_AUTO_UPDATE) so the pin holds.
+ENV AGY_CLI_DISABLE_AUTO_UPDATE=1
+RUN cd /tmp && \
+    curl -fsSLo ag.tar.gz "${ANTIGRAVITY_URL}" && \
+    echo "${ANTIGRAVITY_SHA512}  ag.tar.gz" | sha512sum -c - && \
+    tar -xzf ag.tar.gz antigravity && \
+    install -m 0755 antigravity /usr/local/bin/antigravity && \
+    rm -f antigravity ag.tar.gz && \
+    test "$(HOME=/tmp antigravity --version)" = "${ANTIGRAVITY_VERSION}"
 
 # gh (GitHub CLI, pinned) — verified against the release checksums file, which
 # carries one line per asset; grep the arm64 tarball line and sha256sum -c it.
