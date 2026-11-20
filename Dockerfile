@@ -1,7 +1,9 @@
 # syntax=docker/dockerfile:1
 # check=error=true
 
-# pi.dev cloud box — thin APP image over the stable base.
+# pi-cloud — thin APP image over the stable base.
+# Hosts Claude Code and pi in herdr / herdr-core terminals; deployed as the
+# hermes claude-box sidecar (artr-gitops apps/hermes).
 #
 # The heavy, rarely-changing content (node + OS deps, mise + Ruby) lives
 # in docker/base.Dockerfile (pi-cloud-base). This image carries only the
@@ -24,6 +26,15 @@ ARG KUBECTL_VERSION=1.36.5
 ARG HERDR_VERSION=0.9.3
 # herdr-linux-aarch64 sha256 (release assets carry no checksum sidecar; pinned here)
 ARG HERDR_SHA256=4de7aa3e25678812e92960de64f7c2aaa1bca1f0f80a3c5e559837e231e1f5c0
+# herdr-core (`hc`): the terminal runtime the Herdr mobile/desktop apps reach
+# over `ssh <box> hc connect`. Tarball sha256 from
+# https://releases.herdr.dev/core/<version>/manifest.json (linux-aarch64).
+ARG HC_VERSION=0.1.21
+ARG HC_SHA256=e844a2bfab48a226097679d076bc83042fe57fccef5387ef802e5b24e78b529a
+# Claude Code native build. sha256 = .platforms["linux-arm64"].checksum of
+# https://downloads.claude.ai/claude-code-releases/<version>/manifest.json
+ARG CLAUDE_CODE_VERSION=2.1.325
+ARG CLAUDE_CODE_SHA256=7b6e484b1989a5a14a4b354709ccc8672518a3ec5b9ccd7981fc6254327fde67
 ARG GH_VERSION=2.102.0
 # @playwright/cli (browser automation CLI for pi UAT); its chromium headless
 # shell is baked at image build — see the install-browser RUN below.
@@ -58,6 +69,28 @@ RUN cd /tmp && \
     echo "${HERDR_SHA256}  herdr-linux-aarch64" | sha256sum -c - && \
     install -m 0755 herdr-linux-aarch64 /usr/local/bin/herdr && \
     rm -f herdr-linux-aarch64
+
+# herdr-core (pinned, checksum-verified). In /usr/local/bin so the non-login
+# `ssh box hc connect` the Herdr app runs finds it on sshd's default PATH.
+RUN cd /tmp && \
+    curl -fsSLo hc.tar.gz "https://releases.herdr.dev/core/${HC_VERSION}/herdr-core-linux-aarch64.tar.gz" && \
+    echo "${HC_SHA256}  hc.tar.gz" | sha256sum -c - && \
+    mkdir hc && tar -xzf hc.tar.gz -C hc && \
+    install -m 0755 hc/herdr-core /usr/local/bin/herdr-core && \
+    ln -s herdr-core /usr/local/bin/hc && \
+    rm -rf hc hc.tar.gz && \
+    hc --version
+
+# Claude Code (pinned native binary, checksum-verified). Baked outside the PVC
+# home so every shell (login or not, sshd or herdr/hc terminal) finds it.
+# Never self-updates: DISABLE_AUTOUPDATER=1 (also set by the deployment).
+ENV DISABLE_AUTOUPDATER=1
+RUN cd /tmp && \
+    curl -fsSLo claude "https://downloads.claude.ai/claude-code-releases/${CLAUDE_CODE_VERSION}/linux-arm64/claude" && \
+    echo "${CLAUDE_CODE_SHA256}  claude" | sha256sum -c - && \
+    install -m 0755 claude /usr/local/bin/claude && \
+    rm -f claude && \
+    claude --version
 
 # gh (GitHub CLI, pinned) — verified against the release checksums file, which
 # carries one line per asset; grep the arm64 tarball line and sha256sum -c it.
