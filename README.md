@@ -21,8 +21,9 @@ A persistent, SSH-accessible dev box on the artr OKE cluster (oracle-cluster) fo
   base bakes `build-essential`)
 - **Claude Code** (native build, pinned `CLAUDE_CODE_VERSION`, auto-update off) at
   `/usr/local/bin/claude`, so login and non-login shells both find it
-- **Antigravity CLI** (`antigravity`, Google; pinned `ANTIGRAVITY_VERSION`,
-  self-update off) at `/usr/local/bin/antigravity`. Sign in once per home:
+- **Antigravity CLI** (`antigravity`, Google), self-updating. The image bakes a
+  seed build at `/usr/local/bin/antigravity`; the hermes claude-box copies it
+  once into `~/.local/bin` (PVC), where its updates persist. Sign in once per home:
   over SSH it prints an auth URL to open on your laptop
 - **herdr-core (`hc`)**, pinned `HC_VERSION` — the terminal runtime the
   [Herdr](https://herdr.dev) mobile/desktop apps talk to over `ssh <box> hc connect`
