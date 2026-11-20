@@ -35,7 +35,7 @@ ARG HC_SHA256=e844a2bfab48a226097679d076bc83042fe57fccef5387ef802e5b24e78b529a
 # https://downloads.claude.ai/claude-code-releases/<version>/manifest.json
 ARG CLAUDE_CODE_VERSION=2.1.325
 ARG CLAUDE_CODE_SHA256=7b6e484b1989a5a14a4b354709ccc8672518a3ec5b9ccd7981fc6254327fde67
-# Antigravity CLI (Google; `antigravity`). URL + sha512 from
+# Antigravity CLI (Google; `antigravity`, self-updating). Seed build; URL + sha512 from
 # https://antigravity-cli-auto-updater-974169037036.us-central1.run.app/manifests/linux_arm64.json
 ARG ANTIGRAVITY_VERSION=1.5.13
 ARG ANTIGRAVITY_URL=https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.13-5999302598852608/linux-arm/cli_linux_arm64.tar.gz
@@ -97,9 +97,9 @@ RUN cd /tmp && \
     rm -f claude && \
     claude --version
 
-# Antigravity CLI (pinned, sha512-verified). Baked outside the PVC home like
-# claude; self-update off (AGY_CLI_DISABLE_AUTO_UPDATE) so the pin holds.
-ENV AGY_CLI_DISABLE_AUTO_UPDATE=1
+# Antigravity CLI (sha512-verified). This baked copy is a SEED: it self-updates,
+# which needs a user-writable path, so deployments copy it once into the
+# home's ~/.local/bin (hermes claude-install) and it updates itself there.
 RUN cd /tmp && \
     curl -fsSLo ag.tar.gz "${ANTIGRAVITY_URL}" && \
     echo "${ANTIGRAVITY_SHA512}  ag.tar.gz" | sha512sum -c - && \
