@@ -12,14 +12,6 @@
     {
       "customType": "regex",
       "fileMatch": ["Dockerfile"],
-      "matchStrings": ["ARG HERDR_VERSION=(?<currentValue>\\S+)"],
-      "datasourceTemplate": "github-releases",
-      "packageNameTemplate": "herdrdev/herdr",
-      "extractVersionTemplate": "^v(?<version>.*)$"
-    },
-    {
-      "customType": "regex",
-      "fileMatch": ["Dockerfile"],
       "matchStrings": ["ARG KUBECTL_VERSION=(?<currentValue>\\S+)"],
       "datasourceTemplate": "github-releases",
       "packageNameTemplate": "kubernetes/kubernetes",

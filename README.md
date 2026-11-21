@@ -5,8 +5,7 @@ A persistent, SSH-accessible dev box on the artr OKE cluster (oracle-cluster) fo
 
 ## What's inside
 
-- **pi coding agent** (global npm, pinned 0.84.x) — hosted by herdr (terminal workspace
-  manager for AI agents; `pi` is a recognized agent kind)
+- **pi coding agent** (global npm, pinned `PI_VERSION`)
 - **kubectl v1.36.1** with an in-cluster kubeconfig (`pi-admin` SA, cluster-admin) —
   the box can inspect Argo apps, pods, and logs directly
 - **gh 2.100.0** (GitHub CLI) — PRs, issues, releases, and Actions from the box
@@ -29,13 +28,12 @@ A persistent, SSH-accessible dev box on the artr OKE cluster (oracle-cluster) fo
   [Herdr](https://herdr.dev) mobile/desktop apps talk to over `ssh <box> hc connect`
   (in coding-box the core runs in the `coding-box` container; see
   artr-gitops `apps/coding-box/README.md`)
-- **herdr 0.8.x** — terminal workspace manager: workspaces/tabs/panes host pi agents
-  and raw shells; a persistent server survives SSH disconnects
 - **sshd** (key-only, root, hardened) — the only entry point, port 22
 - **LazyVim tooling**: fd, fzf, unzip (Mason), lazygit (pinned `LAZYGIT_VERSION`);
   `nvim` is also linked into `/usr/local/bin` for non-login shells
-- **neovim 0.12.5** (official arm64 build) — sshd + nvim = phone-friendly editing. The box runs your LazyVim config (`artieeez/nvim-config`), boot-synced to `~/.config/nvim`; nvim/herdr icons render client-side, so the ssh client's terminal needs a Nerd Font (phone: [docs/PHONE-TERMUX.md](docs/PHONE-TERMUX.md) §6, Mac: JetBrainsMono Nerd Font)
-- ~~tmux~~ — removed in the ruby-4.0.5-5 base rebuild; herdr hosts the panes
+- **neovim 0.12.5** (official arm64 build) — sshd + nvim = phone-friendly editing. The box runs your LazyVim config (`artieeez/nvim-config`), boot-synced to `~/.config/nvim`; nvim icons render client-side, so the ssh client's terminal needs a Nerd Font (phone: [docs/PHONE-TERMUX.md](docs/PHONE-TERMUX.md) §6, Mac: JetBrainsMono Nerd Font)
+- ~~tmux~~ — removed in the ruby-4.0.5-5 base rebuild
+- ~~herdr~~ — removed; herdr-core (`hc`) hosts the terminals
 - git, ripgrep, sqlite3, libvips, jq, Node 24
 - **less + man pages** — user-friendly pager + local docs (`man-db`/`groff-base`),
   including the C library reference, system calls and all (`manpages-dev`:
@@ -54,7 +52,7 @@ one copy of the heavy layers:
   - mise/Ruby. Rebuilt rarely (ruby/node/OS bumps) by `build-base.yaml`
   (path-triggered push + `workflow_dispatch`); pushed as
   `vcp.ocir.io/axtvnrdemzo7/pi-cloud-base:ruby-4.0.5-7` (+ `latest`).
-  (tmux was removed in the ruby-4.0.5-5 rebuild — herdr hosts the panes.)
+  (tmux was removed in the ruby-4.0.5-5 rebuild.)
 - **`pi-cloud`** (repo-root `Dockerfile`) — thin delta over the base: pi agent
   version, kubectl, gh, playwright-cli (+ chromium headless shell), container
   assets (`container/`). Built on every push.
@@ -78,7 +76,8 @@ re-published under a new tag).
 | `/secrets/pi/auth.json` | pi `auth.json` (opencode-go + friends) | no → pi has no model auth |
 
 Entrypoint copies these into `/root/.ssh` and `/root/.pi/agent`, runs the boot
-sync (see below), starts the herdr server (agent host), then sshd.
+sync (see below), then starts sshd. (coding-box replaces this entrypoint; see
+artr-gitops `apps/coding-box`.)
 
 ## Boot provisioning (config + repos)
 
@@ -92,19 +91,8 @@ box's environment context is injected by the `pi-cloud-context` extension
 
 ## Using it
 
-The box boots a **herdr** server with a shell pane ready in `~/artieeez`.
-Attach and start agents there:
-
-```bash
-ssh pi          # or `ssh pi-cloud` / ssh root@pi.<tailnet>.ts.net
-herdr           # attach to the herdr session (panes/tabs/workspaces)
-```
-
-or from a device with the herdr CLI (your Mac has it via Homebrew):
-
-```bash
-herdr --remote pi-cloud          # attach to the box's herdr server over SSH
-```
+Connect with the Herdr desktop/mobile apps (they run `ssh <box> hc connect`)
+or plain `ssh`.
 
 Set-up + access details:
 
@@ -114,8 +102,6 @@ Set-up + access details:
 | [docs/PHONE-TERMUX.md](docs/PHONE-TERMUX.md) | Termux over ADB, keygen, phone ssh config, 16 KB dialog |
 | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | every runtime gotcha hit during bring-up + fixes |
 | [docs/BOOT-SYNC.md](docs/BOOT-SYNC.md) | boot provisioning design: config + repo sync, layout |
-
-`AUTO_PI=1` on the Deployment starts a pi agent pane inside the boot herdr server.
 
 ## Local build
 
