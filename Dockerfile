@@ -44,7 +44,7 @@ ARG LAZYGIT_VERSION=0.66.3
 # shell is baked at image build — see the install-browser RUN below.
 ARG PLAYWRIGHT_CLI_VERSION=0.1.22
 # markdownlint-cli2 (pinned, npm): agents lint markdown per repo AGENTS.md.
-ARG MARKDOWNLINT_CLI2_VERSION=0.23.2
+ARG MARKDOWNLINT_CLI2_VERSION=0.24.2
 
 # python3 + file: everyday agent tooling (edit scripts, type sniffing).
 RUN apt-get update && \
