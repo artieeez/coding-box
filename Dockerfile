@@ -1,9 +1,9 @@
 # syntax=docker/dockerfile:1
 # check=error=true
 
-# pi-cloud — thin APP image over the stable base.
+# coding-box — thin APP image over the stable base.
 # Hosts Claude Code and pi in herdr / herdr-core terminals; deployed as the
-# hermes claude-box sidecar (artr-gitops apps/hermes).
+# coding-box pod (artr-gitops apps/coding-box).
 #
 # The heavy, rarely-changing content (node + OS deps, mise + Ruby) lives
 # in docker/base.Dockerfile (pi-cloud-base). This image carries only the
@@ -55,7 +55,7 @@ RUN apt-get update && \
     apt-get install --no-install-recommends -y python3 file && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
-# markdownlint-cli2 for agents running in the hermes claude-box sidecar.
+# markdownlint-cli2 for agents running in coding-box.
 RUN npm install -g "markdownlint-cli2@${MARKDOWNLINT_CLI2_VERSION}"
 
 # pi coding agent (pinned; --ignore-scripts per upstream docs)
@@ -111,7 +111,7 @@ RUN cd /tmp && \
 
 # Antigravity CLI (sha512-verified). This baked copy is a SEED: it self-updates,
 # which needs a user-writable path, so deployments copy it once into the
-# home's ~/.local/bin (hermes claude-install) and it updates itself there.
+# home's ~/.local/bin (coding-box setup init) and it updates itself there.
 RUN cd /tmp && \
     curl -fsSLo ag.tar.gz "${ANTIGRAVITY_URL}" && \
     echo "${ANTIGRAVITY_SHA512}  ag.tar.gz" | sha512sum -c - && \
@@ -177,21 +177,22 @@ COPY container/herdr-pane-config.sh /usr/local/bin/herdr-pane-config
 RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/sync-configs.sh /usr/local/bin/herdr-pane-config && \
     ln -s /usr/local/bin/entrypoint.sh /entrypoint
 
-# Non-root runtime for the hermes claude-box sidecar (artr-gitops apps/hermes),
-# which runs this image as UID/GID 10000 with HOME=/opt/data/claude-home:
+# Non-root runtime for coding-box (artr-gitops apps/coding-box),
+# which runs this image as UID/GID 10000 (user arturwebber, HOME=/home/arturwebber,
+# the PVC mount; -M: not created in the image):
 # - a real passwd entry (sshd, whoami, git need one)
 # - mise shims writable, so `bundle install` can reshim gem executables
 #   (Ruby itself stays root-owned; gems go to GEM_HOME/BUNDLE_PATH on the PVC)
 # - TMPDIR set (Debian leaves it unset; agents write "$TMPDIR/x")
 # - a WORKDIR that UID 10000 can stat (git/herdr fail in /root)
-RUN groupadd -g 10000 claude && \
-    useradd -u 10000 -g 10000 -d /opt/data/claude-home -M -s /bin/bash \
-      -c "Claude (hermes claude-box)" claude && \
+RUN groupadd -g 10000 arturwebber && \
+    useradd -u 10000 -g 10000 -d /home/arturwebber -M -s /bin/bash \
+      -c "Artur Webber (coding-box)" arturwebber && \
     chown -R 10000:10000 /opt/mise/shims
 ENV TMPDIR=/tmp
 
 # Default user stays root (the legacy entrypoint expects it); Kubernetes sets
-# runAsUser: 10000 for claude-box.
+# runAsUser: 10000 for coding-box.
 USER root
 WORKDIR /tmp
 
