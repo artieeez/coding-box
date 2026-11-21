@@ -22,7 +22,7 @@ ARG BASE_TAG=latest
 FROM ${BASE_IMAGE}:${BASE_TAG}
 
 ARG PI_VERSION=1.6.0
-ARG KUBECTL_VERSION=1.36.5
+ARG KUBECTL_VERSION=1.36.6
 # herdr-core (`hc`): the terminal runtime the Herdr mobile/desktop apps reach
 # over `ssh <box> hc connect`. Tarball sha256 from
 # https://releases.herdr.dev/core/<version>/manifest.json (linux-aarch64).
