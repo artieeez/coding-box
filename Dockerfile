@@ -2,7 +2,7 @@
 # check=error=true
 
 # coding-box — thin APP image over the stable base.
-# Hosts Claude Code and pi in herdr / herdr-core terminals; deployed as the
+# Hosts Claude Code and pi in herdr-core terminals; deployed as the
 # coding-box pod (artr-gitops apps/coding-box).
 #
 # The heavy, rarely-changing content (node + OS deps, mise + Ruby) lives
@@ -23,9 +23,6 @@ FROM ${BASE_IMAGE}:${BASE_TAG}
 
 ARG PI_VERSION=1.6.0
 ARG KUBECTL_VERSION=1.36.5
-ARG HERDR_VERSION=0.9.3
-# herdr-linux-aarch64 sha256 (release assets carry no checksum sidecar; pinned here)
-ARG HERDR_SHA256=4de7aa3e25678812e92960de64f7c2aaa1bca1f0f80a3c5e559837e231e1f5c0
 # herdr-core (`hc`): the terminal runtime the Herdr mobile/desktop apps reach
 # over `ssh <box> hc connect`. Tarball sha256 from
 # https://releases.herdr.dev/core/<version>/manifest.json (linux-aarch64).
@@ -49,8 +46,7 @@ ARG PLAYWRIGHT_CLI_VERSION=0.1.22
 # markdownlint-cli2 (pinned, npm): agents lint markdown per repo AGENTS.md.
 ARG MARKDOWNLINT_CLI2_VERSION=0.23.2
 
-# python3 + file: everyday agent tooling (edit scripts, type sniffing) and the
-# python3 that herdr's Claude integration hook needs to report session state.
+# python3 + file: everyday agent tooling (edit scripts, type sniffing).
 RUN apt-get update && \
     apt-get install --no-install-recommends -y python3 file && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
@@ -69,13 +65,6 @@ RUN cd /tmp && \
     echo "$(cat kubectl.sha256)  kubectl" | sha256sum -c - && \
     install -m 0755 kubectl /usr/local/bin/kubectl && \
     rm -f kubectl kubectl.sha256
-
-# herdr (agent multiplexer; pinned, checksum-verified — no upstream sidecar)
-RUN cd /tmp && \
-    curl -fsSLO "https://github.com/herdrdev/herdr/releases/download/v${HERDR_VERSION}/herdr-linux-aarch64" && \
-    echo "${HERDR_SHA256}  herdr-linux-aarch64" | sha256sum -c - && \
-    install -m 0755 herdr-linux-aarch64 /usr/local/bin/herdr && \
-    rm -f herdr-linux-aarch64
 
 # LazyVim tooling (artieeez/nvim-config, same as the Mac): fd + fzf for the
 # pickers, unzip for Mason's LSP downloads. Debian names fd `fdfind`. nvim is
@@ -99,7 +88,7 @@ RUN cd /tmp && \
     hc --version
 
 # Claude Code (pinned native binary, checksum-verified). Baked outside the PVC
-# home so every shell (login or not, sshd or herdr/hc terminal) finds it.
+# home so every shell (login or not, sshd or hc terminal) finds it.
 # Never self-updates: DISABLE_AUTOUPDATER=1 (also set by the deployment).
 ENV DISABLE_AUTOUPDATER=1
 RUN cd /tmp && \
@@ -144,7 +133,7 @@ RUN cd /tmp && \
 # the heavy part. Browsers bake under /opt, NOT the default ~/.cache under
 # /root: /root is the PVC mount and shadows image content at runtime, so a
 # browser baked there would vanish on first boot. PLAYWRIGHT_BROWSERS_PATH is
-# exported here (entrypoint/herdr inherit it) and re-exported in profile.d for
+# exported here (the entrypoint inherits it) and re-exported in profile.d for
 # sshd sessions, which reset the container env.
 #
 # Headless shell only, via PLAYWRIGHT_MCP_CONFIG: with no config the CLI
@@ -173,8 +162,7 @@ COPY container/sshd_config /etc/ssh/sshd_config.d/10-pi-cloud.conf
 COPY container/profile.d/pi-cloud.sh /etc/profile.d/pi-cloud.sh
 COPY container/entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY container/sync-configs.sh /usr/local/bin/sync-configs.sh
-COPY container/herdr-pane-config.sh /usr/local/bin/herdr-pane-config
-RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/sync-configs.sh /usr/local/bin/herdr-pane-config && \
+RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/sync-configs.sh && \
     ln -s /usr/local/bin/entrypoint.sh /entrypoint
 
 # Non-root runtime for coding-box (artr-gitops apps/coding-box),
@@ -184,7 +172,7 @@ RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/sync-configs.sh /usr/lo
 # - mise shims writable, so `bundle install` can reshim gem executables
 #   (Ruby itself stays root-owned; gems go to GEM_HOME/BUNDLE_PATH on the PVC)
 # - TMPDIR set (Debian leaves it unset; agents write "$TMPDIR/x")
-# - a WORKDIR that UID 10000 can stat (git/herdr fail in /root)
+# - a WORKDIR that UID 10000 can stat (git fails in /root)
 RUN groupadd -g 10000 arturwebber && \
     useradd -u 10000 -g 10000 -d /home/arturwebber -M -s /bin/bash \
       -c "Artur Webber (coding-box)" arturwebber && \

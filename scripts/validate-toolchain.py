@@ -8,8 +8,7 @@ Checks (spec-anchored, TCH-01..TCH-09):
   2. build-base.yaml pins BASE_TAG ruby-4.0.5-7 (TCH-02)
   3. build-push-ocir.yaml pins BASE_TAG ruby-4.0.5-7 (TCH-03)
   4. renovate.json declares the five custom managers + policy (TCH-04)
-  5. herdr-sha-sync workflow + script exist with trigger/fork guard (TCH-05)
-  6. app Dockerfile keeps sha256sum herdr check; script hashes + no-ops (TCH-05/06)
+  (5/6, the herdr sha-sync checks, were retired with herdr itself)
   7. .specs/STATE.md records AD-001..AD-003 (TCH-07)
   8. README.md + app Dockerfile carry only the removal statement (TCH-08)
   9. artr-gitops pi app notes contain no tmux (TCH-09, needs --gitops)
@@ -49,8 +48,6 @@ def main():
     bb = read(args.root, ".github/workflows/build-base.yaml")
     bp = read(args.root, ".github/workflows/build-push-ocir.yaml")
     rj = read(args.root, "renovate.json")
-    wf = read(args.root, ".github/workflows/herdr-sha-sync.yaml")
-    sh = read(args.root, "scripts/herdr-sha-sync.sh")
     st = read(args.root, ".specs/STATE.md")
     readme = read(args.root, "README.md")
 
@@ -84,7 +81,6 @@ def main():
             cfg = json.loads(rj)
             cms = {c.get("packageNameTemplate"): c for c in cfg.get("customManagers", [])}
             want = {
-                "herdrdev/herdr": ("github-releases", "HERDR_VERSION"),
                 "kubernetes/kubernetes": ("github-releases", "KUBECTL_VERSION"),
                 "cli/cli": ("github-releases", "GH_VERSION"),
                 "@earendil-works/pi-coding-agent": ("npm", "PI_VERSION"),
@@ -115,31 +111,6 @@ def main():
                                  f"sched={tz} labels={labels} own_off={own_off} pinDigests={digests_on}"))
         except json.JSONDecodeError as e:
             results.append(check(4, False, f"invalid json: {e}"))
-
-    # 5. sha-sync workflow + script exist with trigger, path filter, fork guard
-    if wf is None:
-        results.append(check(5, False, "herdr-sha-sync.yaml missing"))
-    else:
-        trig = "pull_request" in wf and re.search(r"paths:[\s\S]*Dockerfile", wf)
-        fork_guard = ("head.repo.full_name" in wf or "fork" in wf.lower())
-        calls_script = "herdr-sha-sync.sh" in wf
-        results.append(check(5, bool(trig and fork_guard and calls_script),
-                             f"trigger={bool(trig)} fork_guard={fork_guard} script_ref={calls_script}"))
-    if sh is None:
-        results.append(check(5, False, "scripts/herdr-sha-sync.sh missing"))
-    else:
-        hashes = "sha256sum" in sh and "HERDR_SHA256" in sh and "HERDR_VERSION" in sh
-        loud = "set -euo pipefail" in sh
-        noop = re.search(r"if.*==.*then|if.*=.*then", sh)
-        results.append(check(5, bool(hashes and loud and noop),
-                             f"hashes={hashes} fail_loud={loud} idempotent={bool(noop)}"))
-
-    # 6. app Dockerfile keeps build-time sha256sum herdr verification
-    if app_d is None:
-        results.append(check(6, False, "Dockerfile missing"))
-    else:
-        ver = re.search(r"HERDR_SHA256[\s\S]{0,400}?sha256sum -c", app_d)
-        results.append(check(6, bool(ver), "sha256sum herdr check retained"))
 
     # 7. decisions recorded
     if st is None:
