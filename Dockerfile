@@ -37,7 +37,7 @@ ARG CLAUDE_CODE_SHA256=7b6e484b1989a5a14a4b354709ccc8672518a3ec5b9ccd7981fc62543
 ARG ANTIGRAVITY_VERSION=1.5.13
 ARG ANTIGRAVITY_URL=https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.13-5999302598852608/linux-arm/cli_linux_arm64.tar.gz
 ARG ANTIGRAVITY_SHA512=dccea2eb455099f5175f0c87cc47b38fcefe4cb0cb44dea3927469bb4bbf68ac3c0b30fc04affb24c17e90959386a93c3785e8e4b8b1a3338ca4e4d57b80057b
-ARG GH_VERSION=2.102.0
+ARG GH_VERSION=2.105.0
 # lazygit (LazyVim's <leader>gg), pinned; verified against the release checksums.
 ARG LAZYGIT_VERSION=0.66.3
 # @playwright/cli (browser automation CLI for pi UAT); its chromium headless
