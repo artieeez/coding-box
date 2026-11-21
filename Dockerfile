@@ -42,7 +42,7 @@ ARG GH_VERSION=2.102.0
 ARG LAZYGIT_VERSION=0.66.3
 # @playwright/cli (browser automation CLI for pi UAT); its chromium headless
 # shell is baked at image build — see the install-browser RUN below.
-ARG PLAYWRIGHT_CLI_VERSION=0.1.22
+ARG PLAYWRIGHT_CLI_VERSION=0.1.25
 # markdownlint-cli2 (pinned, npm): agents lint markdown per repo AGENTS.md.
 ARG MARKDOWNLINT_CLI2_VERSION=0.24.2
 
