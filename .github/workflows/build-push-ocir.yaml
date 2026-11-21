@@ -8,7 +8,7 @@ on:
 env:
   REGISTRY: vcp.ocir.io
   OCIR_NAMESPACE: axtvnrdemzo7
-  IMAGE_NAME: pi-cloud
+  IMAGE_NAME: coding-box
   # Stable base (node + OS deps + mise/Ruby) built by build-base.yaml.
   # Keep BASE_TAG in sync there; bump it when the base is republished.
   BASE_IMAGE_NAME: pi-cloud-base

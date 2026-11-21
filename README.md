@@ -1,4 +1,4 @@
-# pi-cloud
+# coding-box (formerly pi-cloud)
 
 A persistent, SSH-accessible dev box on the artr OKE cluster (oracle-cluster) for running
 [pi](https://pi.dev) (+ Ruby) from an Android phone or any SSH client.
@@ -22,13 +22,13 @@ A persistent, SSH-accessible dev box on the artr OKE cluster (oracle-cluster) fo
 - **Claude Code** (native build, pinned `CLAUDE_CODE_VERSION`, auto-update off) at
   `/usr/local/bin/claude`, so login and non-login shells both find it
 - **Antigravity CLI** (`antigravity`, Google), self-updating. The image bakes a
-  seed build at `/usr/local/bin/antigravity`; the hermes claude-box copies it
+  seed build at `/usr/local/bin/antigravity`; coding-box copies it
   once into `~/.local/bin` (PVC), where its updates persist. Sign in once per home:
   over SSH it prints an auth URL to open on your laptop
 - **herdr-core (`hc`)**, pinned `HC_VERSION` — the terminal runtime the
   [Herdr](https://herdr.dev) mobile/desktop apps talk to over `ssh <box> hc connect`
-  (in the hermes claude-box the core runs in the `claude-box` container; see
-  artr-gitops `apps/hermes/README.md`)
+  (in coding-box the core runs in the `coding-box` container; see
+  artr-gitops `apps/coding-box/README.md`)
 - **herdr 0.8.x** — terminal workspace manager: workspaces/tabs/panes host pi agents
   and raw shells; a persistent server survives SSH disconnects
 - **sshd** (key-only, root, hardened) — the only entry point, port 22
@@ -61,8 +61,8 @@ one copy of the heavy layers:
 
 ## How it's deployed
 
-GitHub Action builds `linux/arm64` → pushes to OCIR (`vcp.ocir.io/axtvnrdemzo7/pi-cloud`)
-→ bumps the image tag in `artieeez/artr-gitops/apps/hermes/deployment.yaml` (claude-box sidecar) → Argo CD syncs.
+GitHub Action builds `linux/arm64` → pushes to OCIR (`vcp.ocir.io/axtvnrdemzo7/coding-box`)
+→ bumps the image tag in `artieeez/artr-gitops/apps/coding-box/deployment.yaml` (manual promote workflow) → Argo CD syncs.
 
 The app build pins `BASE_TAG` (both workflows must stay in sync when the base is
 re-published under a new tag).
