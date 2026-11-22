@@ -162,8 +162,13 @@ COPY container/sshd_config /etc/ssh/sshd_config.d/10-pi-cloud.conf
 COPY container/profile.d/pi-cloud.sh /etc/profile.d/pi-cloud.sh
 COPY container/entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY container/sync-configs.sh /usr/local/bin/sync-configs.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/sync-configs.sh && \
-    ln -s /usr/local/bin/entrypoint.sh /entrypoint
+# hc skill for Claude Code: the deployment's setup runs it every boot to write
+# ~/.claude/skills/hc from the baked hc (version-matched). Smoke-tested here.
+COPY container/install-hc-skill.sh /usr/local/bin/install-hc-skill
+RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/sync-configs.sh /usr/local/bin/install-hc-skill && \
+    ln -s /usr/local/bin/entrypoint.sh /entrypoint && \
+    install-hc-skill /tmp/hc-skill && grep -q '^name: hc$' /tmp/hc-skill/SKILL.md && \
+    rm -rf /tmp/hc-skill
 
 # Non-root runtime for coding-box (artr-gitops apps/coding-box),
 # which runs this image as UID/GID 10000 (user arturwebber, HOME=/home/arturwebber,
