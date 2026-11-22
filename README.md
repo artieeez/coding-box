@@ -27,7 +27,9 @@ A persistent, SSH-accessible dev box on the artr OKE cluster (oracle-cluster) fo
 - **herdr-core (`hc`)**, pinned `HC_VERSION` — the terminal runtime the
   [Herdr](https://herdr.dev) mobile/desktop apps talk to over `ssh <box> hc connect`
   (in coding-box the core runs in the `coding-box` container; see
-  artr-gitops `apps/coding-box/README.md`)
+  artr-gitops `apps/coding-box/README.md`). `install-hc-skill` writes hc's
+  manual (`hc --skill`) to `~/.claude/skills/hc`, so Claude knows what
+  `<hc from="…">` messages are; coding-box runs it on every boot
 - **sshd** (key-only, root, hardened) — the only entry point, port 22
 - **LazyVim tooling**: fd, fzf, unzip (Mason), lazygit (pinned `LAZYGIT_VERSION`);
   `nvim` is also linked into `/usr/local/bin` for non-login shells
