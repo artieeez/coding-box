@@ -19,7 +19,11 @@ A persistent, SSH-accessible dev box on the artr OKE cluster (oracle-cluster) fo
   `.ruby-version` aware; native-gem `bundle install` works out of the box (the
   base bakes `build-essential`)
 - **Claude Code** (native build, pinned `CLAUDE_CODE_VERSION`, auto-update off) at
-  `/usr/local/bin/claude`, so login and non-login shells both find it
+  `/usr/local/bin/claude`, so login and non-login shells both find it.
+  `claude-0`, `claude-1` and `claude-2` run it logged into separate accounts:
+  each uses its own `CLAUDE_CONFIG_DIR` (`~/.claude-N`), so a login or token
+  refresh in one never switches the others; shared config (settings, hooks,
+  skills, statusline) is symlinked in from `~/.claude`. Log in once per account
 - **Antigravity CLI** (`antigravity`, Google), self-updating. The image bakes a
   seed build at `/usr/local/bin/antigravity`; coding-box copies it
   once into `~/.local/bin` (PVC), where its updates persist. Sign in once per home:
