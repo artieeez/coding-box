@@ -165,7 +165,10 @@ COPY container/sync-configs.sh /usr/local/bin/sync-configs.sh
 # hc skill for Claude Code: the deployment's setup runs it every boot to write
 # ~/.claude/skills/hc from the baked hc (version-matched). Smoke-tested here.
 COPY container/install-hc-skill.sh /usr/local/bin/install-hc-skill
-RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/sync-configs.sh /usr/local/bin/install-hc-skill && \
+# claude-0/1/2: Claude Code on separate accounts (own CLAUDE_CONFIG_DIR each).
+COPY container/claude-account.sh /usr/local/bin/claude-account
+RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/sync-configs.sh /usr/local/bin/install-hc-skill /usr/local/bin/claude-account && \
+    for n in 0 1 2; do ln -s claude-account "/usr/local/bin/claude-${n}"; done && \
     ln -s /usr/local/bin/entrypoint.sh /entrypoint && \
     install-hc-skill /tmp/hc-skill && grep -q '^name: hc$' /tmp/hc-skill/SKILL.md && \
     rm -rf /tmp/hc-skill
