@@ -49,6 +49,13 @@
     {
       "customType": "regex",
       "fileMatch": ["Dockerfile"],
+      "matchStrings": ["ARG ORKASTERY_VERSION=(?<currentValue>\\S+)"],
+      "datasourceTemplate": "npm",
+      "packageNameTemplate": "@orkastery/cli"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["Dockerfile"],
       "matchStrings": ["ARG LAZYGIT_VERSION=(?<currentValue>\\S+)"],
       "datasourceTemplate": "github-releases",
       "packageNameTemplate": "jesseduffield/lazygit",
