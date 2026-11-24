@@ -34,6 +34,17 @@ A persistent, SSH-accessible dev box on the artr OKE cluster (oracle-cluster) fo
   artr-gitops `apps/coding-box/README.md`). `install-hc-skill` writes hc's
   manual (`hc --skill`) to `~/.claude/skills/hc`, so Claude knows what
   `<hc from="…">` messages are; coding-box runs it on every boot
+- **Orkastery (`ork`)**, pinned `ORKASTERY_VERSION` (`@orkastery/cli`, npm) —
+  conducts Claude Code/Codex through verified six-phase threads. Per repo:
+  `ork init`, then `ork adapter install claude-code` for the `/orkastery:ork`
+  plugin; `ork doctor` shows what holds on the box
+- **cron** via [supercronic](https://github.com/aptible/supercronic), pinned
+  `SUPERCRONIC_VERSION`: the box runs as a non-root user, so the classic cron
+  daemon can't. One crontab file, `~/.crontab` (PVC home); the `crontab` shim
+  (`-l`, `-`, `FILE`, `-e`, `-r`, validated by `supercronic -test`) edits it and
+  supercronic reloads it on change. It runs as the `cron` sidecar in
+  artr-gitops `apps/coding-box` (`cron-run`). This is what `ork fabrica batida
+  instalar` writes to
 - **sshd** (key-only, root, hardened) — the only entry point, port 22
 - **LazyVim tooling**: fd, fzf, unzip (Mason), lazygit (pinned `LAZYGIT_VERSION`);
   `nvim` is also linked into `/usr/local/bin` for non-login shells

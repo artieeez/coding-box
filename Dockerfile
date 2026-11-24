@@ -45,6 +45,14 @@ ARG LAZYGIT_VERSION=0.66.3
 ARG PLAYWRIGHT_CLI_VERSION=0.1.25
 # markdownlint-cli2 (pinned, npm): agents lint markdown per repo AGENTS.md.
 ARG MARKDOWNLINT_CLI2_VERSION=0.24.2
+# Orkastery (`ork`, pinned, npm): conducts Claude Code/Codex through verified
+# six-phase threads. Pure JS, no install scripts.
+ARG ORKASTERY_VERSION=0.6.10
+# supercronic: cron for containers, runs as the box's non-root user (Debian's
+# cron daemon needs root). sha256 = the linux-arm64 asset digest of
+# https://github.com/aptible/supercronic/releases/tag/v<version>
+ARG SUPERCRONIC_VERSION=0.2.51
+ARG SUPERCRONIC_SHA256=4ae22576a78223d8ccdf5f3b3660a5cbb5288416bf0ca96afc4a36d195932b94
 
 # python3 + file: everyday agent tooling (edit scripts, type sniffing).
 RUN apt-get update && \
@@ -53,6 +61,11 @@ RUN apt-get update && \
 
 # markdownlint-cli2 for agents running in coding-box.
 RUN npm install -g "markdownlint-cli2@${MARKDOWNLINT_CLI2_VERSION}"
+
+# Orkastery CLI (`ork`). Per-repo setup (`ork init`, `ork adapter install
+# claude-code`) writes into the repo / PVC home, so it is not baked here.
+RUN npm install -g "@orkastery/cli@${ORKASTERY_VERSION}" && \
+    ork --version
 
 # pi coding agent (pinned; --ignore-scripts per upstream docs)
 RUN npm install -g --ignore-scripts "@earendil-works/pi-coding-agent@${PI_VERSION}"
@@ -108,6 +121,16 @@ RUN cd /tmp && \
     install -m 0755 antigravity /usr/local/bin/antigravity && \
     rm -f antigravity ag.tar.gz && \
     test "$(HOME=/tmp antigravity --version)" = "${ANTIGRAVITY_VERSION}"
+
+# supercronic (pinned, checksum-verified) + a `crontab` shim over its one file
+# (~/.crontab on the PVC home), so `ork fabrica batida instalar` (crontab -l /
+# crontab -) works. The deployment's `cron` sidecar runs cron-run.
+RUN cd /tmp && \
+    curl -fsSLo supercronic "https://github.com/aptible/supercronic/releases/download/v${SUPERCRONIC_VERSION}/supercronic-linux-arm64" && \
+    echo "${SUPERCRONIC_SHA256}  supercronic" | sha256sum -c - && \
+    install -m 0755 supercronic /usr/local/bin/supercronic && \
+    rm -f supercronic && \
+    supercronic -version
 
 # lazygit (pinned) — verified against the release checksums file.
 RUN cd /tmp && \
@@ -167,7 +190,11 @@ COPY container/sync-configs.sh /usr/local/bin/sync-configs.sh
 COPY container/install-hc-skill.sh /usr/local/bin/install-hc-skill
 # claude-0/1/2: Claude Code on separate accounts (own CLAUDE_CONFIG_DIR each).
 COPY container/claude-account.sh /usr/local/bin/claude-account
-RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/sync-configs.sh /usr/local/bin/install-hc-skill /usr/local/bin/claude-account && \
+# cron: `crontab` shim + the sidecar's runner (supercronic on ~/.crontab).
+COPY container/crontab.sh /usr/local/bin/crontab
+COPY container/cron-run.sh /usr/local/bin/cron-run
+RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/sync-configs.sh /usr/local/bin/install-hc-skill /usr/local/bin/claude-account \
+      /usr/local/bin/crontab /usr/local/bin/cron-run && \
     for n in 0 1 2; do ln -s claude-account "/usr/local/bin/claude-${n}"; done && \
     ln -s /usr/local/bin/entrypoint.sh /entrypoint && \
     install-hc-skill /tmp/hc-skill && grep -q '^name: hc$' /tmp/hc-skill/SKILL.md && \
