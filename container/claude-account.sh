@@ -30,5 +30,10 @@ for f in settings.json statusline.sh CLAUDE.md keybindings.json commands hooks b
   fi
 done
 
+# The box bakes claude at /usr/local/bin; elsewhere (e.g. macOS, native
+# installer -> ~/.local/bin) take whichever `claude` is on PATH.
+claude=/usr/local/bin/claude
+[ -x "$claude" ] || claude=$(command -v claude) || { echo "$name: claude not found on PATH" >&2; exit 127; }
+
 export CLAUDE_CONFIG_DIR="$dir"
-exec /usr/local/bin/claude "$@"
+exec "$claude" "$@"
